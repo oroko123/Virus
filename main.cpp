@@ -25,7 +25,7 @@ void PrintPoststamp(const Poststamp& poststamp)
         std::get<3>(poststamp)<<"\n";
 }
 
-void ProcessLine(const PoststampStore& dict, const std::string& line)
+void ProcessLine(const PoststampStore& store, const std::string& line)
 {
     //TODO
     Poststamp poststamp;
@@ -37,12 +37,12 @@ void ProcessLine(const PoststampStore& dict, const std::string& line)
 }
 
 
-void RegisterPoststamp(const PoststampStore& dict, const Poststamp& poststamp)
+void RegisterPoststamp(const PoststampStore& store, const Poststamp& poststamp)
 {
     //TODO
 }
 
-void QueryPoststamps(const PoststampStore& dict, int yearFrom, int yearTo)
+void QueryPoststamps(const PoststampStore& store, int yearFrom, int yearTo)
 {
     //TODO
 }
@@ -50,9 +50,9 @@ void QueryPoststamps(const PoststampStore& dict, int yearFrom, int yearTo)
 int main()
 {
     std::string line;
-    PoststampStore dict;
+    PoststampStore store;
     while(std::getline(std::cin, line))
     {
-        ProcessLine(dict, line);
+        ProcessLine(store, line);
     }
 }
