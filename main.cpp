@@ -3,6 +3,7 @@
 #include<tuple>
 #include<string>
 
+//                          <year,  country,     value,       name     >
 using Poststamp = std::tuple<int, std::string, std::string, std::string>;
 
 struct PoststampCompare
