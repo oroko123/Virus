@@ -2,9 +2,11 @@
 #include<set>
 #include<tuple>
 #include<string>
+#include<list>
+#include<algorithm>
 
-//                          <year,  country,     value,       name     >
-using Poststamp = std::tuple<int, std::string, std::string, std::string>;
+//                          <year, value,    country,       name    >
+using Poststamp = std::tuple<int, double , std::string,  std::string>;
 
 struct PoststampCompare
 {
@@ -15,36 +17,52 @@ struct PoststampCompare
 };
 
 using PoststampStore = std::multiset<Poststamp, PoststampCompare>;
+using PoststampStoreIter = std::multiset<Poststamp, PoststampCompare>::iterator;
 
 void PrintPoststamp(const Poststamp& poststamp)
 {
     std::cout<<
         std::get<0>(poststamp)<<" "<<
-        std::get<1>(poststamp)<<" "<<
         std::get<2>(poststamp)<<" "<<
+        std::get<1>(poststamp)<<" "<<
         std::get<3>(poststamp)<<"\n";
 }
 
-void ProcessLine(const PoststampStore& store, const std::string& line)
+void ProcessLine(const PoststampStore store, const std::string& line)
 {
     //TODO
-    Poststamp poststamp;
-    std::get<0>(poststamp) = 0;
-    std::get<1>(poststamp) = "cambio";
-    std::get<2>(poststamp) = "dolor";
-    std::get<3>(poststamp) = "oreiro";
-    PrintPoststamp(poststamp); 
 }
 
-
-void RegisterPoststamp(const PoststampStore& store, const Poststamp& poststamp)
+Poststamp BuildPoststamp(int year, double value, std::string country, 
+    std::string name)
 {
-    //TODO
+    Poststamp poststamp;
+    std::get<0>(poststamp) = year;
+    std::get<1>(poststamp) = value;
+    std::get<2>(poststamp) = country;
+    std::get<3>(poststamp) = name;
+    return poststamp;
+}
+
+void RegisterPoststamp(PoststampStore& store, const Poststamp& poststamp)
+{
+     store.insert(poststamp);
 }
 
 void QueryPoststamps(const PoststampStore& store, int yearFrom, int yearTo)
 {
-    //TODO
+    Poststamp begin = BuildPoststamp(yearFrom, 0, "", "");
+    Poststamp end = BuildPoststamp(yearTo, 0, "", "");
+    PoststampStoreIter fromIter = store.lower_bound(begin);
+    PoststampStoreIter toIter = store.upper_bound(end);
+    
+    std::list<Poststamp> result(fromIter, toIter);  
+    result.sort();
+    for(std::list<Poststamp>::iterator it = result.begin();
+        it != result.end(); it ++)
+    {
+        PrintPoststamp(*it);
+    }
 }
 
 int main()
