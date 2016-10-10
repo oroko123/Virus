@@ -61,9 +61,9 @@ void debug_poststamp(const Poststamp& poststamp)
     std::cout<<
 		"\nRok: " << 
         std::get<0>(poststamp)<<" "<<
-        "\nCena: " <<
+        "\nPoczta: " <<
         std::get<2>(poststamp)<<" "<<
-        "\nPocta: " <<
+        "\nCena: " <<
         std::get<1>(poststamp)<<" "<<
         "\nNazwa: " << 
         std::get<3>(poststamp)<<"\n";
