@@ -36,7 +36,7 @@ function run_subdir {
     cd $2;
 }
 
-
+g++ -std=c++14 -Wall ../../main.cpp -o ../../main.o
 for i in $(cat testlist); do
     run_subdir $i $(pwd);
 done;
