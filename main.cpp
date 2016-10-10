@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <vector>
 #include <sstream>
-#include <stdexcept>
+#include <stdexcept> 
 
 //                          <year, value,    country,       name    >
 using Poststamp = std::tuple<int, double , std::string,  std::string>;
@@ -33,7 +33,7 @@ void split(const std::string& s, char delim, std::vector<std::string> &elems)
 		if (!item.empty()) {
 			elems.push_back(item);
 		}
-    }
+    } 
 }
 
 std::vector<std::string> split(const std::string &s, char delim) 
