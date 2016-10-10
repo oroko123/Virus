@@ -5,8 +5,8 @@
 #include<list>
 #include<algorithm>
 
-//                          <year, value,    country,       name    >
-using Poststamp = std::tuple<int, double , std::string,  std::string>;
+//                          <year, value,    country,       name    ,    valueInput>
+using Poststamp = std::tuple<int, double , std::string,  std::string,   std::string>;
 
 struct PoststampCompare
 {
@@ -23,7 +23,7 @@ void PrintPoststamp(const Poststamp& poststamp)
 {
     std::cout<<
         std::get<0>(poststamp)<<" "<<
-        std::get<2>(poststamp)<<" "<<
+        std::get<4>(poststamp)<<" "<<
         std::get<1>(poststamp)<<" "<<
         std::get<3>(poststamp)<<"\n";
 }
@@ -34,13 +34,14 @@ void ProcessLine(const PoststampStore store, const std::string& line)
 }
 
 Poststamp BuildPoststamp(int year, double value, std::string country, 
-    std::string name)
+    std::string name, std::string valueInput)
 {
     Poststamp poststamp;
     std::get<0>(poststamp) = year;
     std::get<1>(poststamp) = value;
     std::get<2>(poststamp) = country;
     std::get<3>(poststamp) = name;
+    std::get<4>(poststamp) = valueInput;
     return poststamp;
 }
 
@@ -51,8 +52,8 @@ void RegisterPoststamp(PoststampStore& store, const Poststamp& poststamp)
 
 void QueryPoststamps(const PoststampStore& store, int yearFrom, int yearTo)
 {
-    Poststamp begin = BuildPoststamp(yearFrom, 0, "", "");
-    Poststamp end = BuildPoststamp(yearTo, 0, "", "");
+    Poststamp begin = BuildPoststamp(yearFrom, 0, "", "", "");
+    Poststamp end = BuildPoststamp(yearTo, 0, "", "", "");
     PoststampStoreIter fromIter = store.lower_bound(begin);
     PoststampStoreIter toIter = store.upper_bound(end);
     
