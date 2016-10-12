@@ -9,15 +9,15 @@ NC='\033[0m'
 
 function run_single {
     printf "  ${BLU}[INFO] At test $1\n${NC}"
-    ../../main.o <$1.in >_tmp 2>_tmp2
-    if [ "$(diff $1.out _tmp)" != "" ]
+    ../main <$1.in >$1.myout 2>$1.myerr
+    if [ "$(diff $1.out $1.myout)" != "" ]
     then
             printf "    ${RED}[ERR] Your stdout differs!\n${NC}";
     else
             printf "    ${GRN}[OK] Stdout ok.\n${NC}"
     fi
 
-    if [ "$(diff $1.err _tmp2)" != "" ]
+    if [ "$(diff $1.err $1.myerr)" != "" ]
     then
             printf "    ${RED}[ERR] Your stderr differs!\n${NC}";
     else
@@ -32,11 +32,10 @@ function run_subdir {
     for j in $(cat testlist); do
         run_single $j;
     done;
-    rm _tmp*;
     cd $2;
 }
 
-g++ -std=c++14 -Wall ../../main.cpp -o ../../main.o
+g++ -std=c++14 -Wall ../../main.cpp -o main
 for i in $(cat testlist); do
     run_subdir $i $(pwd);
 done;
