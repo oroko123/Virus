@@ -6,11 +6,11 @@
 #include <algorithm>
 #include <vector>
 #include <sstream>
-#include <stdexcept> 
+#include <stdexcept>
 #include <regex>
 
-//                          <year, value,    country,       name    ,    valueInput>
-using Poststamp = std::tuple<int, float , std::string,  std::string,   std::string>;
+//                          <year,  country,   value,      name    ,    valueInput>
+using Poststamp = std::tuple<int, std::string, float , std::string,   std::string>;
 
 struct Poststamp_Compare
 {
@@ -27,7 +27,7 @@ using Poststamp_Store_Iter = std::multiset<Poststamp, Poststamp_Compare>::iterat
 
 namespace
 {
-	void split(const std::string& s, char delim, std::vector<std::string> &elems) 
+	void split(const std::string& s, char delim, std::vector<std::string> &elems)
 	{
 		std::stringstream ss;
 		ss.str(s);
@@ -36,10 +36,10 @@ namespace
 			if (!item.empty()) {
 				elems.push_back(item);
 			}
-		} 
+		}
 	}
 
-	std::vector<std::string> split_whitespace(const std::string& s, char delim) 
+	std::vector<std::string> split_whitespace(const std::string& s, char delim)
 	{
 		std::vector<std::string> elems;
 		std::string copy_s = s;
@@ -48,7 +48,7 @@ namespace
 		return elems;
 	}
 
-	int format_date(std::string& s) 
+	int format_date(std::string& s)
 	{
 		if (s.length() != 4) {
 			throw std::invalid_argument("Not a date");
@@ -61,26 +61,13 @@ namespace
 
 	}
 
-	void debug_poststamp(const Poststamp& poststamp)
-	{
-		std::cout<<
-		"\nRok: " << 
-		std::get<0>(poststamp)<<" "<<
-		"\nPoczta: " <<
-		std::get<2>(poststamp)<<" "<<
-		"\nCena: " <<
-		std::get<4>(poststamp)<<" "<<
-		"\nNazwa: " << 
-		std::get<3>(poststamp)<<"\n";
-	}
-
 /** END OF HELPERS **/
 
 	void print_poststamp(const Poststamp& poststamp)
 	{
 		std::cout<<
-		std::get<0>(poststamp)<<" "<<
-		std::get<2>(poststamp)<<" "<<
+		std::get<0>(poststamp)<<" "<<		
+		std::get<1>(poststamp)<<" "<<
 		std::get<4>(poststamp)<<" "<<
 		std::get<3>(poststamp)<<"\n";
 
@@ -91,8 +78,8 @@ namespace
 	{
 		Poststamp poststamp;
 		std::get<0>(poststamp) = year;
-		std::get<1>(poststamp) = value;
-		std::get<2>(poststamp) = country;
+		std::get<1>(poststamp) = country;
+		std::get<2>(poststamp) = value;
 		std::get<3>(poststamp) = name;
 		std::get<4>(poststamp) = valueInput;
 		return poststamp;
@@ -147,7 +134,7 @@ namespace
 	{
 		int date_position = 0;
 		int iterator = -1;
-		
+
 		int converted_date = 0;
 		float converted_price = 0.00;
 		std::string parsed_stamp_name = "";
@@ -155,13 +142,13 @@ namespace
 		std::string parsed_price = "";
 
 		std::vector<std::string> tokens = split_whitespace(line, ' ');
-		
+
 		bool valid_stamp = true;
 		bool valid_post = true;
 		bool valid_date = true;
 		bool valid_price = true;
 		bool valid = true;
-		
+
 		for (auto token : tokens) {
 			iterator++;
 			try {
@@ -170,7 +157,7 @@ namespace
 			} catch (const std::invalid_argument& ia) {
 			}
 		}
-		
+
 		if (date_position != 0 && date_position != tokens.size() - 1) {
 			for (int i = 0; i < date_position - 1; i++) {
 				parsed_stamp_name += tokens.at(i);
@@ -181,7 +168,7 @@ namespace
 				parsed_post_name += tokens.at(i);
 				if (i != tokens.size() - 1)
 					parsed_post_name += " ";
-			} 
+			}
 			try {
 				parsed_price = tokens.at(date_position - 1);
 				std::string copy_parsed_price  = parsed_price;
@@ -190,19 +177,19 @@ namespace
 			} catch (const std::invalid_argument& ia) {
 			}
 		}
-		
+
 		valid_date = converted_date > 0;
 		valid_price = converted_price > 0;
 		valid_post = parsed_post_name.length() > 0;
 		valid_stamp = parsed_stamp_name.length() > 0;
-		
-		if (valid_date && valid_price && valid_post && valid_stamp) { 
+
+		if (valid_date && valid_price && valid_post && valid_stamp) {
 			Poststamp stamp = build_poststamp(converted_date, converted_price, parsed_post_name, parsed_stamp_name, parsed_price);
 			store.insert(stamp);
 		} else {
 			Poststamp stamp = build_poststamp(converted_date, converted_price, parsed_post_name, parsed_stamp_name, parsed_price);
 			valid = false;
-		} 
+		}
 		return valid;
 	}
 }
@@ -216,11 +203,11 @@ int main()
 	int line_number = 0;
 	int not_parsed = 0;
 	while (std::getline(std::cin, line))
-	{	
+	{
 		line_number++;
 		if (reading_stamps && !only_queries) {
 			reading_stamps = process_stamp(store, line);
-		} 
+		}
 		if (!reading_stamps || only_queries) {
 			not_parsed++;
 			reading_stamps = process_query(store, line);
@@ -237,4 +224,3 @@ int main()
 		not_parsed = 0;
 	}
 }
-
