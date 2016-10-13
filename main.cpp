@@ -66,7 +66,7 @@ namespace
 	void print_poststamp(const Poststamp& poststamp)
 	{
 		std::cout<<
-		std::get<0>(poststamp)<<" "<<		
+		std::get<0>(poststamp)<<" "<<
 		std::get<1>(poststamp)<<" "<<
 		std::get<4>(poststamp)<<" "<<
 		std::get<3>(poststamp)<<"\n";
@@ -83,11 +83,6 @@ namespace
 		std::get<3>(poststamp) = name;
 		std::get<4>(poststamp) = valueInput;
 		return poststamp;
-	}
-
-	void register_poststamp(Poststamp_Store& store, const Poststamp& poststamp)
-	{
-		store.insert(poststamp);
 	}
 
 	void query_poststamps(const Poststamp_Store& store, int yearFrom, int yearTo)
@@ -132,10 +127,10 @@ namespace
 
 	bool process_stamp(Poststamp_Store& store, const std::string& line)
 	{
-		int date_position = 0;
+		unsigned int date_position = 0;
 		int iterator = -1;
 
-		int converted_date = 0;
+		unsigned int converted_date = 0;
 		float converted_price = 0.00;
 		std::string parsed_stamp_name = "";
 		std::string parsed_post_name = "";
@@ -159,12 +154,12 @@ namespace
 		}
 
 		if (date_position != 0 && date_position != tokens.size() - 1) {
-			for (int i = 0; i < date_position - 1; i++) {
+			for (unsigned int i = 0; i < date_position - 1; i++) {
 				parsed_stamp_name += tokens.at(i);
 				if (i != date_position - 2)
 					parsed_stamp_name += " ";
 			}
-			for (int i = date_position + 1; i < tokens.size(); i++) {
+			for (unsigned int i = date_position + 1; i < tokens.size(); i++) {
 				parsed_post_name += tokens.at(i);
 				if (i != tokens.size() - 1)
 					parsed_post_name += " ";
