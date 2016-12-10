@@ -90,6 +90,8 @@ z biblioteki standardowej.
 
 === Przykład użycia ===
 
+
+```c++
 #include "virus_genealogy.h"
 #include <cassert>
 #include <iostream>
@@ -157,6 +159,7 @@ int main() {
     std::cout << e.what() << std::endl;
   }
 }
+```
 
 Powyższy program powinien wypisać na standardowe wyjście:
 
