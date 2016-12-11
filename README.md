@@ -13,17 +13,13 @@ Krawędź łączy wirusa z bezpośrednio otrzymaną z niego mutacją.
 
 Należy zaimplementować szablon klasy, która reprezentuje taki graf.
 
-```c++
 template <class Virus> VirusGenealogy;
-```
 
 Klasa Virus reprezentuje informacje o wirusie. Jej implementacja
 zostanie dostarczona w stosownym czasie.
 
 Klasa VirusGenealogy powinna udostępniać następujący interfejs.
 
-
-```c++
 // Tworzy nową genealogię.
 // Tworzy także węzeł wirusa macierzystego o identyfikatorze stem_id.
 VirusGenealogy(Virus::id_type const &stem_id);
@@ -68,7 +64,6 @@ void connect(Virus::id_type const &child_id, virus::id_type const &parent_id);
 // Zgłasza wyjątek TriedToRemoveStemVirus przy próbie usunięcia
 // wirusa macierzystego.
 void remove(Virus::id_type const &id);
-```
 
 Zakładamy, że:
 * klasa Virus ma konstruktor przyjmujący argument typu Virus::id_type;
