@@ -6,22 +6,23 @@
 #include <vector>
 #include <exception>
 #include <iostream>
+#include <memory>
 
 class VirusNotFound : public std::exception {
     virtual const char *what() const throw() {
-        return "VirusNotFound\n";
+        return "VirusNotFound";
     }
 };
 
 class VirusAlreadyCreated : public std::exception {
     virtual const char *what() const throw() {
-        return "VirusAlreadyCreated\n";
+        return "VirusAlreadyCreated";
     }
 };
 
 class TriedToRemoveStemVirus : public std::exception {
     virtual const char *what() const throw() {
-        return "TriedToRemoveStemVirus\n";
+        return "TriedToRemoveStemVirus";
     }
 };
 
@@ -32,13 +33,13 @@ private:
 
     class VirusHolder {
     public:
-        Virus virus;
+        std::unique_ptr <Virus> virus;
         std::unordered_set<id_type> parents;
         std::unordered_set<id_type> children;
 
         VirusHolder(id_type const &_id, std::vector<id_type> const &_parents) {
-            this->virus = Virus(_id);
-            this->parents = std::unordered_set <id_type> (_parents.begin(), _parents.end());
+            this->virus = std::unique_ptr <Virus> (new Virus(_id));
+            this->parents = std::unordered_set <id_type> (_parents.cbegin(), _parents.cend());
         }
 
         VirusHolder(id_type const &_id) {
@@ -48,46 +49,46 @@ private:
         VirusHolder() { }
     };
 
-    Virus stem;
+    std::unique_ptr <Virus> stem;
     std::unordered_map<id_type, VirusHolder> genealogy;
 
 public:
     VirusGenealogy(id_type const &stem_id) {
-        stem = Virus(stem_id);
+        stem = std::unique_ptr <Virus> (new Virus(stem_id));
         create(stem_id, std::vector<id_type>());
     }
 
     id_type get_stem_id() const {
-        return stem.get_id();
+        return stem->get_id();
     }
 
     bool exists(id_type const &id) const {
         return genealogy.count(id) == 1;
     }
 
-
-    //TODO chwilowe usuniecie const
-    Virus &operator[](id_type const &id) {
+    Virus &operator[](id_type const &id) const {
         if (!exists(id)) {
             throw VirusNotFound();
         }
-        return genealogy[id].virus;
+        return *genealogy.find(id)->second.virus;
     }
 
-    //TODO chwilowe usuniecie const
-    const std::vector<id_type> get_children(id_type const &id) {
+    std::vector<id_type> get_children(id_type const &id) const {
         if (!exists(id)) {
             throw VirusNotFound();
         }
-        return std::vector <id_type> (genealogy[id].children.begin(), genealogy[id].children.end());
+        return std::vector <id_type>
+            (genealogy.find(id)->second.children.begin(),
+            genealogy.find(id)->second.children.end());
     }
 
-    //TODO chwilowe usuniecie const
-    std::vector<id_type> get_parents(id_type const &id)  {
+    std::vector<id_type> get_parents(id_type const &id) const {
         if (!exists(id)) {
             throw VirusNotFound();
         }
-        return std::vector <id_type> (genealogy[id].parents.begin(), genealogy[id].parents.end());
+        return std::vector <id_type>
+            (genealogy.find(id)->second.parents.begin(),
+            genealogy.find(id)->second.parents.end());
     }
 
 
@@ -121,7 +122,6 @@ public:
         genealogy[parent_id].children.insert(child_id);
     }
 
-    //TODO
     void remove(id_type const &id) {
         if(!exists(id)) {
             throw VirusNotFound();
@@ -130,17 +130,13 @@ public:
             throw TriedToRemoveStemVirus();
         }
         for(id_type parent_id : genealogy[id].parents) {
-            VirusHolder parent = genealogy[parent_id];
-            parent.children.erase(id);
+            genealogy[parent_id].children.erase(id);
         }
         for(id_type child_id : genealogy[id].children) {
-            VirusHolder child = genealogy[child_id];
 
-            std::cout<<child.parents.size();
-            child.parents.erase(id);
+            genealogy[child_id].parents.erase(id);
 
-            std::cout<<child.parents.size()<<std::endl;
-            if(child.parents.empty()) {
+            if(genealogy[child_id].parents.empty()) {
                 remove(child_id);
             }
         }
