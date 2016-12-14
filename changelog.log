@@ -1,4 +1,7 @@
 + konstruktor VirusGenealogy: delete na copy konstruktorze
 + funkcja create: dodanie warunku o niepustym wektorze virusów-rodziców 
- - stworzenie funkcji create_stem dla przypadku źródła
++ stworzenie funkcji create_stem dla przypadku źródła
 + poprawki stylistyczne: dodanie spacji przed klamrami otwierającymi
+-------------
++ zamiana get_stem_id: zamiast korzystac z niebezpiecznej get_id, zapamietuje w klasie id
+  dzieki czemu get_stem_id jest no-throw

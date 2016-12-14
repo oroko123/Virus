@@ -51,22 +51,29 @@ private:
 
     std::unique_ptr <Virus> stem;
     std::unordered_map<id_type, VirusHolder> genealogy;
+    id_type stem_id;
 
 public:
-    VirusGenealogy(id_type const &stem_id) {
-        stem = std::unique_ptr <Virus> (new Virus(stem_id));
-        create_stem(stem_id);
+    VirusGenealogy(id_type const &_stem_id) {
+        stem = std::unique_ptr <Virus> (new Virus(_stem_id));
+        create_stem(_stem_id);
+        stem_id = _stem_id;
     }
     VirusGenealogy(const VirusGenealogy& gen) = delete;
 
-    id_type get_stem_id() const {
-        return stem->get_id();
-    }
 
-    bool exists(id_type const &id) const {
+	/// no-throw
+    id_type get_stem_id() const noexcept {
+        return stem_id;
+    }
+	
+	/// no-throw
+    bool exists(id_type const &id) const noexcept {
         return genealogy.count(id) == 1;
     }
 
+
+	/// strong
     Virus &operator[](id_type const &id) const {
         if (!exists(id)) {
             throw VirusNotFound();
@@ -74,6 +81,7 @@ public:
         return *genealogy.find(id)->second.virus;
     }
 
+	/// strong
     std::vector<id_type> get_children(id_type const &id) const {
         if (!exists(id)) {
             throw VirusNotFound();
@@ -83,6 +91,7 @@ public:
             genealogy.find(id)->second.children.end());
     }
 
+	/// strong
     std::vector<id_type> get_parents(id_type const &id) const {
         if (!exists(id)) {
             throw VirusNotFound();
@@ -92,16 +101,19 @@ public:
             genealogy.find(id)->second.parents.end());
     }
 
+	/// no-throw
 	 void create_stem(id_type const &id) noexcept {
-        genealogy[id] = VirusHolder(id, std::vector<id_type>());
+        genealogy[id] = VirusHolder(id);
     }
 
+	/// strong
     void create(id_type const &id, id_type const &parent_id) {
         std::vector <id_type> parent_ids;
         parent_ids.push_back(parent_id);
         create(id, parent_ids);
     }
 
+	/// strong
     void create(id_type const &id, std::vector<id_type> const &parent_ids) {
         if (exists(id)) {
             throw VirusAlreadyCreated();
@@ -120,6 +132,7 @@ public:
         }
     }
 
+	/// strong
     void connect(id_type const &child_id, id_type const &parent_id) {
         if (genealogy.find(child_id) == genealogy.end() ||
             genealogy.find(parent_id) == genealogy.end()) {
@@ -129,6 +142,7 @@ public:
         genealogy[parent_id].children.insert(child_id);
     }
 
+	/// strong
     void remove(id_type const &id) {
         if (!exists(id)) {
             throw VirusNotFound();
