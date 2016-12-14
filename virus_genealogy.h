@@ -55,8 +55,9 @@ private:
 public:
     VirusGenealogy(id_type const &stem_id) {
         stem = std::unique_ptr <Virus> (new Virus(stem_id));
-        create(stem_id, std::vector<id_type>());
+        create_stem(stem_id);
     }
+    VirusGenealogy(const VirusGenealogy& gen) = delete;
 
     id_type get_stem_id() const {
         return stem->get_id();
@@ -91,6 +92,9 @@ public:
             genealogy.find(id)->second.parents.end());
     }
 
+	 void create_stem(id_type const &id) noexcept {
+        genealogy[id] = VirusHolder(id, std::vector<id_type>());
+    }
 
     void create(id_type const &id, id_type const &parent_id) {
         std::vector <id_type> parent_ids;
@@ -102,13 +106,16 @@ public:
         if (exists(id)) {
             throw VirusAlreadyCreated();
         }
+        if (parent_ids.size() == 0) {
+			throw VirusNotFound();
+		}
         for (id_type parent_id : parent_ids) {
             if (!exists(parent_id)) {
                 throw VirusNotFound();
             }
         }
         genealogy[id] = VirusHolder(id, parent_ids);
-        for(id_type parent : parent_ids) {
+        for (id_type parent : parent_ids) {
             genealogy[parent].children.insert(id);
         }
     }
@@ -123,20 +130,20 @@ public:
     }
 
     void remove(id_type const &id) {
-        if(!exists(id)) {
+        if (!exists(id)) {
             throw VirusNotFound();
         }
-        if(get_stem_id() == id) {
+        if (get_stem_id() == id) {
             throw TriedToRemoveStemVirus();
         }
-        for(id_type parent_id : genealogy[id].parents) {
+        for (id_type parent_id : genealogy[id].parents) {
             genealogy[parent_id].children.erase(id);
         }
-        for(id_type child_id : genealogy[id].children) {
+        for (id_type child_id : genealogy[id].children) {
 
             genealogy[child_id].parents.erase(id);
 
-            if(genealogy[child_id].parents.empty()) {
+            if (genealogy[child_id].parents.empty()) {
                 remove(child_id);
             }
         }

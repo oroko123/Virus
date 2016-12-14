@@ -1,0 +1,4 @@
++ konstruktor VirusGenealogy: delete na copy konstruktorze
++ funkcja create: dodanie warunku o niepustym wektorze virusów-rodziców 
+ - stworzenie funkcji create_stem dla przypadku źródła
++ poprawki stylistyczne: dodanie spacji przed klamrami otwierającymi
