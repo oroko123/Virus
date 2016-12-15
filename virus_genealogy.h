@@ -32,7 +32,7 @@ private:
 
     class VirusHolder {
 	// !!! wyjątki w konstruktorze?
-        // tu mi się wydaje, że skoro pierwszą instrukcją jest ten konstruktor, to powinno być ok
+  // tu mi się wydaje, że skoro pierwszą instrukcją jest ten konstruktor, to powinno być ok
     public:
         std::unique_ptr <Virus> virus;
         std::set<id_type> parents;
@@ -74,7 +74,7 @@ public:
     id_type get_stem_id() const noexcept {
         return stem_id;
     }
-	
+
 	/// strong
 	/// [why]: metoda count jest strong
     bool exists(id_type const &id) const {
@@ -128,27 +128,31 @@ public:
             throw VirusAlreadyCreated();
         }
         if (parent_ids.size() == 0) {
-			throw VirusNotFound();
-		}
+			      throw VirusNotFound();
+		    }
         for (id_type parent_id : parent_ids) {
             if (!exists(parent_id)) {
                 throw VirusNotFound();
             }
         }
 
-        VirusHolder vh = VirusHolder(id, parent_ids);
-        genealogy[id] = VirusHolder(id, parent_ids);
-
         /// oddzielenie od wyjątkogennego konstruktora
         /// w ten sposob gwarantujemy to, ze obiekt pod adresem genealogy[id]
         /// się nie zmieni
         // !!! : powinno być tak : genealogy[id] = vh;
-        for (id_type parent : parent_ids) {
-		/// If a single element is to be inserted, there are no changes 
-		/// in the container in case of exception (strong guarantee).
-			std::set<id_type> ch = genealogy[parent].children;
-			ch.insert(id);
-            genealogy[parent].children = ch;
+
+        std::vector <typename std::set<id_type>::iterator> v;
+        try {
+          for (id_type parent : parent_ids) {
+            v.push_back(genealogy[parent].children.insert(id).first);
+          }
+          VirusHolder vh = VirusHolder(id, parent_ids);
+          genealogy[id] = VirusHolder(id, parent_ids);
+        } catch (const std::exception &e) {
+          for (size_t i = 0; i < v.size(); i++) {
+            genealogy[parent_ids[i]].children.erase(v[i]);
+          }
+          throw e;
         }
     }
 
@@ -161,12 +165,12 @@ public:
 
         /*
         std::set<id_type> p = genealogy[child_id].parents;
-        /// If a single element is to be inserted, there are no changes 
+        /// If a single element is to be inserted, there are no changes
 		/// in the container in case of exception (strong guarantee).
 		p.insert(parent_id);
         genealogy[child_id].parents = p;
         std::set<id_type> ch = genealogy[parent_id].children;
-        /// If a single element is to be inserted, there are no changes 
+        /// If a single element is to be inserted, there are no changes
 		/// in the container in case of exception (strong guarantee).
 		ch.insert(child_id);
         genealogy[parent_id].children = ch;
@@ -179,9 +183,7 @@ public:
 
         /// If a single element is to be inserted, there are no changes
         /// in the container in case of exception (strong guarantee).
-        auto it = genealogy[child_id].parents.begin();
-        genealogy[child_id].parents.insert(it, parent_id);
-
+        auto it =   genealogy[child_id].parents.insert(parent_id).first;
         try {
             genealogy[parent_id].children.insert(child_id);
         } catch (const std::exception &e) {
