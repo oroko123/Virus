@@ -1,8 +1,8 @@
 #ifndef VIRUS_GENEALOGY_H
 #define VIRUS_GENEALOGY_H
 
-#include <unordered_map>
-#include <unordered_set>
+#include <map>
+#include <set>
 #include <vector>
 #include <exception>
 #include <iostream>
@@ -28,18 +28,20 @@ class TriedToRemoveStemVirus : public std::exception {
 
 template<class Virus>
 class VirusGenealogy {
+	// !!! wyjątki w konstruktorze?
 private:
     typedef typename Virus::id_type id_type;
 
     class VirusHolder {
+	// !!! wyjątki w konstruktorze?
     public:
         std::unique_ptr <Virus> virus;
-        std::unordered_set<id_type> parents;
-        std::unordered_set<id_type> children;
+        std::set<id_type> parents;
+        std::set<id_type> children;
 
         VirusHolder(id_type const &_id, std::vector<id_type> const &_parents) {
             this->virus = std::unique_ptr <Virus> (new Virus(_id));
-            this->parents = std::unordered_set <id_type> (_parents.cbegin(), _parents.cend());
+            this->parents = std::set <id_type> (_parents.cbegin(), _parents.cend());
         }
 
         VirusHolder(id_type const &_id) {
@@ -50,7 +52,7 @@ private:
     };
 
     std::unique_ptr <Virus> stem;
-    std::unordered_map<id_type, VirusHolder> genealogy;
+    std::map<id_type, VirusHolder> genealogy;
     id_type stem_id;
 
 public:
@@ -63,17 +65,20 @@ public:
 
 
 	/// no-throw
+	/// [why]: zwraca prywatne pole
     id_type get_stem_id() const noexcept {
         return stem_id;
     }
 	
-	/// no-throw
-    bool exists(id_type const &id) const noexcept {
-        return genealogy.count(id) == 1;
+	/// strong
+	/// [why]: metoda count jest strong
+    bool exists(id_type const &id) const {
+			return genealogy.count(id) == 1;
     }
 
 
 	/// strong
+	/// [why]: metoda find jest strong
     Virus &operator[](id_type const &id) const {
         if (!exists(id)) {
             throw VirusNotFound();
@@ -82,6 +87,7 @@ public:
     }
 
 	/// strong
+	/// [why]: metoda find jest strong
     std::vector<id_type> get_children(id_type const &id) const {
         if (!exists(id)) {
             throw VirusNotFound();
@@ -92,6 +98,7 @@ public:
     }
 
 	/// strong
+	/// [why]: metoda find jest strong
     std::vector<id_type> get_parents(id_type const &id) const {
         if (!exists(id)) {
             throw VirusNotFound();
@@ -101,12 +108,14 @@ public:
             genealogy.find(id)->second.parents.end());
     }
 
-	/// no-throw
-	 void create_stem(id_type const &id) noexcept {
+	/// strong
+	/// [why]: operator [i] jest strong
+	 void create_stem(id_type const &id) {
         genealogy[id] = VirusHolder(id);
     }
 
 	/// strong
+	/// [why]: metoda find jest strong
     void create(id_type const &id, id_type const &parent_id) {
         std::vector <id_type> parent_ids;
         parent_ids.push_back(parent_id);
@@ -114,6 +123,7 @@ public:
     }
 
 	/// strong
+	/// [why]: implementacja + insert jest strong
     void create(id_type const &id, std::vector<id_type> const &parent_ids) {
         if (exists(id)) {
             throw VirusAlreadyCreated();
@@ -126,23 +136,42 @@ public:
                 throw VirusNotFound();
             }
         }
+        // !!! : powinno być tak : VirusHolder vh = VirusHolder(id, parent_ids);
+        /// oddzielenie od wyjątkogennego konstruktora
+        /// w ten sposob gwarantujemy to, ze obiekt pod adresem genealogi[id]
+        /// się nie zmieni
+        // !!! : powinno być tak : genealogy[id] = vh;
         genealogy[id] = VirusHolder(id, parent_ids);
         for (id_type parent : parent_ids) {
-            genealogy[parent].children.insert(id);
+		/// If a single element is to be inserted, there are no changes 
+		/// in the container in case of exception (strong guarantee).
+			std::set<id_type> ch = genealogy[parent].children;
+			ch.insert(id);
+            genealogy[parent].children = ch;
         }
     }
 
 	/// strong
+	/// [why]: find jest strong
     void connect(id_type const &child_id, id_type const &parent_id) {
         if (genealogy.find(child_id) == genealogy.end() ||
             genealogy.find(parent_id) == genealogy.end()) {
             throw VirusNotFound();
         }
-        genealogy[child_id].parents.insert(parent_id);
-        genealogy[parent_id].children.insert(child_id);
+        std::set<id_type> p = genealogy[child_id].parents;
+        /// If a single element is to be inserted, there are no changes 
+		/// in the container in case of exception (strong guarantee).
+		p.insert(parent_id);
+        genealogy[child_id].parents = p;
+        std::set<id_type> ch = genealogy[parent_id].children;
+        /// If a single element is to be inserted, there are no changes 
+		/// in the container in case of exception (strong guarantee).
+		ch.insert(child_id);
+        genealogy[parent_id].children = ch;
     }
 
 	/// strong
+	/// [why]: erase, remove jest strong, empty jest no-throw
     void remove(id_type const &id) {
         if (!exists(id)) {
             throw VirusNotFound();
@@ -154,13 +183,15 @@ public:
             genealogy[parent_id].children.erase(id);
         }
         for (id_type child_id : genealogy[id].children) {
-
-            genealogy[child_id].parents.erase(id);
+			std::set<id_type> p =  genealogy[child_id].parents;
+			p.erase(id);
+			genealogy[child_id].parents = p;
 
             if (genealogy[child_id].parents.empty()) {
                 remove(child_id);
             }
         }
+        // !!! z tym coś trzeba zrobić
         genealogy.erase(id);
     }
 };

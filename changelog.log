@@ -5,3 +5,9 @@
 -------------
 + zamiana get_stem_id: zamiast korzystac z niebezpiecznej get_id, zapamietuje w klasie id
   dzieki czemu get_stem_id jest no-throw
++ dodanie noexcept tam, gdzie mi się wydawało to sensowne : d
++ dodanie komentarza: strong exception tam, gdzie wydaje mi sie, ze moglby sie znalezc.
+------------
++ dodanie opisów pod no-throw/strong
++ zbadanie metod z map, set i obkomentowanie, dlaczego tak
++ swap??? nie wiem, czy to jest dobrze: tam, gdzie jest insert/erase na mapie/secie, swapuję na jakis obiekt i potem podmieniam - ale nie wiem, czy powstaje wowczas nowy, czy to wciaz operowanie na tym samym. moze trzeba by wywolac konstruktor setu i przepisywac? 
