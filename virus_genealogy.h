@@ -127,7 +127,7 @@ public:
         if (exists(id)) {
             throw VirusAlreadyCreated();
         }
-        if (parent_ids.size() == 0) {
+        if (parent_ids.empty()) {
 			      throw VirusNotFound();
 		    }
         for (id_type parent_id : parent_ids) {
@@ -136,23 +136,22 @@ public:
             }
         }
 
-        /// oddzielenie od wyjątkogennego konstruktora
-        /// w ten sposob gwarantujemy to, ze obiekt pod adresem genealogy[id]
-        /// się nie zmieni
-        // !!! : powinno być tak : genealogy[id] = vh;
 
-        std::vector <typename std::set<id_type>::iterator> v;
+        std::vector <std::pair <typename std::map<id_type, VirusHolder>::iterator,
+        typename std::set<id_type>::iterator > > v;
         try {
           for (id_type parent : parent_ids) {
-            v.push_back(genealogy[parent].children.insert(id).first);
+            auto parent_it = genealogy.find(parent);
+            auto el_it = parent_it->second.children.insert(id).first;
+            v.push_back(make_pair(parent_it, el_it));
           }
-          VirusHolder vh = VirusHolder(id, parent_ids);
-          genealogy[id] = VirusHolder(id, parent_ids);
-        } catch (const std::exception &e) {
+          genealogy.emplace(id, VirusHolder(id, parent_ids));
+        } catch (...) {
+
           for (size_t i = 0; i < v.size(); i++) {
-            genealogy[parent_ids[i]].children.erase(v[i]);
+              (v[i].first)->second.children.erase(v[i].second);
           }
-          throw e;
+          throw;
         }
     }
 
