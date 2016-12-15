@@ -4,8 +4,6 @@
 #include <map>
 #include <set>
 #include <vector>
-#include <exception>
-#include <iostream>
 #include <memory>
 
 class VirusNotFound : public std::exception {
@@ -34,6 +32,7 @@ private:
 
     class VirusHolder {
 	// !!! wyjątki w konstruktorze?
+        // tu mi się wydaje, że skoro pierwszą instrukcją jest ten konstruktor, to powinno być ok
     public:
         std::unique_ptr <Virus> virus;
         std::set<id_type> parents;
@@ -41,7 +40,7 @@ private:
 
         VirusHolder(id_type const &_id, std::vector<id_type> const &_parents) {
             this->virus = std::unique_ptr <Virus> (new Virus(_id));
-            this->parents = std::set <id_type> (_parents.cbegin(), _parents.cend());
+            this->parents = std::set <id_type> (_parents.begin(), _parents.end());
         }
 
         VirusHolder(id_type const &_id) {
@@ -51,13 +50,19 @@ private:
         VirusHolder() { }
     };
 
-    std::unique_ptr <Virus> stem;
     std::map<id_type, VirusHolder> genealogy;
     id_type stem_id;
 
+
+    /// strong
+    /// [why]: operator [i] jest strong
+    void create_stem(id_type const &id) {
+        genealogy[id] = VirusHolder(id);
+    }
+
+
 public:
     VirusGenealogy(id_type const &_stem_id) {
-        stem = std::unique_ptr <Virus> (new Virus(_stem_id));
         create_stem(_stem_id);
         stem_id = _stem_id;
     }
@@ -73,7 +78,7 @@ public:
 	/// strong
 	/// [why]: metoda count jest strong
     bool exists(id_type const &id) const {
-			return genealogy.count(id) == 1;
+			return genealogy.find(id) != genealogy.end();
     }
 
 
@@ -109,12 +114,6 @@ public:
     }
 
 	/// strong
-	/// [why]: operator [i] jest strong
-	 void create_stem(id_type const &id) {
-        genealogy[id] = VirusHolder(id);
-    }
-
-	/// strong
 	/// [why]: metoda find jest strong
     void create(id_type const &id, id_type const &parent_id) {
         std::vector <id_type> parent_ids;
@@ -136,12 +135,14 @@ public:
                 throw VirusNotFound();
             }
         }
-        // !!! : powinno być tak : VirusHolder vh = VirusHolder(id, parent_ids);
+
+        VirusHolder vh = VirusHolder(id, parent_ids);
+        genealogy[id] = VirusHolder(id, parent_ids);
+
         /// oddzielenie od wyjątkogennego konstruktora
-        /// w ten sposob gwarantujemy to, ze obiekt pod adresem genealogi[id]
+        /// w ten sposob gwarantujemy to, ze obiekt pod adresem genealogy[id]
         /// się nie zmieni
         // !!! : powinno być tak : genealogy[id] = vh;
-        genealogy[id] = VirusHolder(id, parent_ids);
         for (id_type parent : parent_ids) {
 		/// If a single element is to be inserted, there are no changes 
 		/// in the container in case of exception (strong guarantee).
@@ -152,12 +153,13 @@ public:
     }
 
 	/// strong
-	/// [why]: find jest strong
+	/// [why]: exists jest strong
     void connect(id_type const &child_id, id_type const &parent_id) {
-        if (genealogy.find(child_id) == genealogy.end() ||
-            genealogy.find(parent_id) == genealogy.end()) {
+        if (!exists(child_id) || !exists(parent_id)) {
             throw VirusNotFound();
         }
+
+        /*
         std::set<id_type> p = genealogy[child_id].parents;
         /// If a single element is to be inserted, there are no changes 
 		/// in the container in case of exception (strong guarantee).
@@ -168,6 +170,25 @@ public:
 		/// in the container in case of exception (strong guarantee).
 		ch.insert(child_id);
         genealogy[parent_id].children = ch;
+         */
+
+        //Wydaje mi się, że tu problemem nie jest insert(i tak wrzucamy 1 element)
+        //tylko właśnie to, że dorzucamy w 2 miejscach i wyjątek może się pojawić przy późniejszym dorzuceniu
+        //kopiowanie całego seta jest bardzo nieefektywne
+        //ja zrobiłbym tak:
+
+        /// If a single element is to be inserted, there are no changes
+        /// in the container in case of exception (strong guarantee).
+        auto it = genealogy[child_id].parents.begin();
+        genealogy[child_id].parents.insert(it, parent_id);
+
+        try {
+            genealogy[parent_id].children.insert(child_id);
+        } catch (const std::exception &e) {
+            ///erase with iterator parameter is no-throw
+            genealogy[child_id].parents.erase(it);
+            throw e;
+        }
     }
 
 	/// strong
